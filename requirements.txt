@@ -1,0 +1,13 @@
+Django
+FormEncode
+MySQL-python
+SQLObject
+boto
+django-crispy-forms
+django-environ
+django-extensions
+django-storages
+python-dateutil
+pytz
+six
+virtualenv
