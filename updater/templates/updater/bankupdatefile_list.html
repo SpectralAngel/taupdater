@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block content %}
+{% load crispy_forms_tags %}{% load l10n %}{% load i18n %}
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Banco' %}</th>
+                        <th>{% trans 'Fecha de Cobro' %}</th>
+                        <th>{% trans 'Fecha de Procesamiento' %}</th>
+                        <th>{% trans 'Acciones' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for object in object_list %}
+                    <tr>
+                        <td>{{ object.banco }}</td>
+                        <td>{{ object.fecha_de_cobro }}</td>
+                        <td>{{ object.fecha_de_procesamiento }}</td>
+                        <td>
+                            <a class="btn btn-primary" href="{% url 'bank-update-file-process' object.id %}">Procesar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
