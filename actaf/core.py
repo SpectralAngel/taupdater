@@ -1,8 +1,7 @@
 # -*- coding: utf8 -*-
 #
 # core.py
-# Copyright 2009 - 2013 by Carlos Flores <cafg10@gmail.com>
-# This file is part of Actaf.
+# Copyright 2009 - 2015 by Carlos Flores <cafg10@gmail.com>
 #
 # Actaf is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
