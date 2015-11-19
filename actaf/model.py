@@ -160,11 +160,11 @@ class Affiliate(SQLObject):
     cuotaTables = MultipleJoin("CuotaTable", orderBy='year')
     autoseguros = MultipleJoin("AutoSeguro", orderBy='year')
     """Historial de aportaciones"""
-    loans = MultipleJoin("Loan", orderBy='startDate')
+    loans = SQLMultipleJoin("Loan", orderBy='startDate')
     """Préstamos activos"""
-    payedLoans = MultipleJoin("PayedLoan", orderBy='startDate')
+    payedLoans = SQLMultipleJoin("PayedLoan", orderBy='startDate')
     """Préstamos cancelados"""
-    extras = MultipleJoin("Extra")
+    extras = SQLMultipleJoin("Extra")
     """Deducciones extra a efectuar"""
     deduced = MultipleJoin("Deduced", orderBy=['-year', '-month'])
     """Deducciones efectuadas por planilla en un mes y año"""
@@ -223,14 +223,14 @@ class Affiliate(SQLObject):
         if loan_only:
             return self.get_prestamo()
 
-        total = sum(e.amount for e in self.extras)
-        # loans = sum(l.get_payment() for l in self.loans)
-        # reintegros = sum(r.monto for r in self.reintegros if not r.pagado)
+        extras = self.extras.sum('amount')
 
-        for reintegro in self.reintegros:
-            if reintegro.pagado:
-                break
-            total += reintegro.monto
+        if extras is None:
+            extras = Zero
+
+        total = extras
+        reintegros = sum(r.monto for r in self.reintegros if not r.pagado)
+        total += reintegros
 
         if bank:
             total += self.get_bank_cuota(day)
@@ -286,14 +286,14 @@ class Affiliate(SQLObject):
             if self.cotizacion.jubilados:
                 obligation = obligations.sum('inprema')
 
-            if not self.cotizacion.alternate:
+            if self.cotizacion.alternate:
                 obligation = obligations.sum('amount_compliment')
 
         return obligation
 
     def get_prestamo(self):
 
-        loans = Decimal(0)
+        loans = Zero
         # Cobrar solo el primer préstamo
         for loan in self.loans:
             loans = loan.get_payment()
@@ -301,29 +301,18 @@ class Affiliate(SQLObject):
 
         return loans
 
-    def populate(self, year):
-
-        kw = dict()
-        for n in range(1, 13):
-            kw["month{0}".format(n)] = False
-        return kw
-
     def complete(self, year):
 
         """Agrega un año de aportaciones al estado de cuenta del afiliado"""
 
-        kw = dict()
-        kw['affiliate'] = self
-        kw['year'] = year
+        kw = {'affiliate': self, 'year': year}
         CuotaTable(**kw)
 
     def complete_compliment(self, year):
 
         """Agrega un año de aportaciones al estado de cuenta del afiliado"""
 
-        kw = dict()
-        kw['affiliate'] = self
-        kw['year'] = year
+        kw = {'affiliate': self, 'year': year}
         AutoSeguro(**kw)
 
     def get_delayed(self):
@@ -343,9 +332,7 @@ class Affiliate(SQLObject):
             if year < self.joined.year:
                 return None
 
-            kw = dict()
-            kw['affiliate'] = self
-            kw['year'] = year
+            kw = {'affiliate': self, 'year': year}
             cuota = CuotaTable(**kw)
         return cuota
 
@@ -359,9 +346,7 @@ class Affiliate(SQLObject):
             if year < self.joined.year:
                 return None
 
-            kw = dict()
-            kw['affiliate'] = self
-            kw['year'] = year
+            kw = {'affiliate': self, 'year': year}
             cuota = AutoSeguro(**kw)
         return cuota
 
@@ -570,6 +555,9 @@ class CuotaTable(SQLObject):
         else:
             total = os.sum('amount')
 
+        if total is None:
+            total = Zero
+
         return total
 
     def pago_mes(self, mes, periodo=None):
@@ -757,6 +745,9 @@ class AutoSeguro(SQLObject):
 
         else:
             total = os.sum('amount_compliment')
+
+        if total is None:
+            return Zero
 
         return total
 
@@ -1038,8 +1029,7 @@ class Loan(SQLObject):
             Pay(**kw)
             # Remove the loan and convert it to PayedLoan
             if remove:
-                pass
-                #self.remove()
+                self.remove()
             else:
                 self.debt -= kw['amount']
             return True
@@ -1092,7 +1082,7 @@ class Loan(SQLObject):
         ordenados en cuanto al valor de su monto en capital e intereses"""
 
         pagos = map(Pay.calibrar, self.pays)
-        fechas = list()
+        fechas = []
         result = False
         self.debt = self.capital
         for pago in pagos:
@@ -1116,14 +1106,24 @@ class Loan(SQLObject):
 
         """Obtains the amount that was given to the affiliate in the check"""
 
-        return self.capital - sum(d.amount for d in self.deductions)
+        deduced = self.deductions.sum('amount')
+
+        if deduced is None:
+            deduced = Decimal()
+
+        return self.capital - deduced
 
     def total_deductions(self):
 
         """Muestra el total de las :class:`Deduction` efectuadas a este
         :class:`Loan`"""
 
-        return sum(d.amount for d in self.deductions)
+        deduced = self.deductions.sum('amount')
+
+        if deduced is None:
+            deduced = Decimal()
+
+        return deduced
 
     def remove(self):
 
@@ -1239,18 +1239,34 @@ class Loan(SQLObject):
     def capitalPagado(self):
 
         """Muestra el valor del capital pagado del :class:`Loan`"""
+        pagado = self.pays.sum('capital')
 
-        return self.pays.sum('capital')
+        if pagado is None:
+
+            return Decimal()
+
+        return pagado
 
     def pagado(self):
 
         """Muestra el monto total pagado a este :class:`Loan`"""
+        pagado = self.pays.sum('amount')
 
-        return self.pays.sum('amount')
+        if pagado is None:
+
+            return Decimal()
+
+        return pagado
 
     def interesesPagados(self):
 
-        return self.pays.sum('interest')
+        interes = self.pays.sum('interest')
+
+        if interes is None:
+
+            return Decimal()
+
+        return interes
 
     def reconstruirSaldo(self):
 
@@ -1279,8 +1295,8 @@ class Pay(SQLObject):
         kw = {'payedLoan': payedLoan, 'day': self.day, 'capital': self.capital,
               'interest': self.interest, 'amount': self.amount,
               'receipt': self.receipt, 'description': self.description}
-        OldPay(**kw)
         self.destroySelf()
+        OldPay(**kw)
 
     def revert(self):
         self.loan.debt = self.loan.capital - self.loan.capitalPagado() \
