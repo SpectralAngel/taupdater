@@ -88,7 +88,6 @@ class AnalizadorCSV(object):
         self.perdidos = 0
         self.byID = byID
         if not byID:
-            affiliates = [a.cardID for a in affiliates]
             for a in affiliates:
                 self.affiliates[a.cardID.replace('-', '')] = a
         self.preparse = defaultdict(Decimal)
