@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 from decimal import Decimal
-
 from django.conf import settings
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
@@ -70,16 +69,7 @@ class BankUpdateFile(TimeStampedModel):
         updater.registrar_cuenta(database.get_exceding_account(), 'excedente')
         updater.registrar_cuenta(database.get_inprema_account(), 'complemento')
 
-        conn = sqlhub.getConnection()
-        transaction = conn.transaction()
-        sqlhub.processConnection = transaction
-        try:
-            [updater.update(i, banco.cuota) for i in parsed]
-            transaction.commit()
-        except Exception:
-            transaction.rollback()
-            transaction.begin()
-            raise
+        [updater.update(i, banco.cuota) for i in parsed]
 
         self.procesado = True
         self.save()
