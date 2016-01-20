@@ -274,9 +274,13 @@ class Affiliate(SQLObject):
         obligation = Zero
         if self.banco_completo:
             if not self.cotizacion.jubilados:
-                obligation += obligation.sum('amount_compliment')
+                obligation += obligation.sum('amount_compliment') + obligation.sum(
+                        'alternate'
+                )
             if self.cotizacion.jubilados:
-                obligation += obligation.sum('inprema')
+                obligation += obligation.sum('inprema') + obligation.sum(
+                        'inprema_compliment'
+                )
             if not self.cotizacion.alternate:
                 obligation += obligations.sum('amount')
         else:
@@ -284,7 +288,7 @@ class Affiliate(SQLObject):
                 obligation += obligations.sum('amount')
 
             if self.cotizacion.jubilados:
-                obligation = obligations.sum('inprema')
+                obligation = obligations.sum('inprema_compliment')
 
             if self.cotizacion.alternate:
                 obligation = obligations.sum('amount_compliment')
