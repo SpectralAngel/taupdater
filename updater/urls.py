@@ -4,8 +4,7 @@ from django.conf.urls import patterns, url
 from updater.views import BankUpdateFileDetailView, BankUpdateFileListView, \
     BankUpdateFileProcess
 
-urlpatterns = patterns(
-    'updater',
+urlpatterns = [
     url(
         r'bank/update/^(?P<pk>\d+)$',
         BankUpdateFileDetailView.as_view(),
@@ -22,4 +21,4 @@ urlpatterns = patterns(
         BankUpdateFileProcess.as_view(),
         name='bank-update-file-process'
     ),
-)
+]

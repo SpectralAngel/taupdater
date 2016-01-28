@@ -172,7 +172,7 @@ class Banco(models.Model):
 
     def __str__(self):
 
-        return u'{0}'.format(self.nombre)
+        return '{0}'.format(self.nombre)
 
 
 class BankAccount(models.Model):
@@ -186,6 +186,7 @@ class BankAccount(models.Model):
         db_table = 'bank_account'
 
 
+@python_2_unicode_compatible
 class BankReport(models.Model):
     year = models.IntegerField(blank=True, null=True)
     month = models.IntegerField(blank=True, null=True)
@@ -194,6 +195,10 @@ class BankReport(models.Model):
     class Meta:
         managed = False
         db_table = 'bank_report'
+
+    def __str__(self):
+
+        return '{0}'.format(self.banco.nombre)
 
 
 class Beneficiario(models.Model):
