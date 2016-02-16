@@ -11,3 +11,4 @@ python-dateutil
 pytz
 six
 virtualenv
+-e git+https://github.com/SpectralAngel/bridge.git#egg=bridge
