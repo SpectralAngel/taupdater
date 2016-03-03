@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from updater.views import BankUpdateFileDetailView, BankUpdateFileListView, \
     BankUpdateFileProcess
 
 urlpatterns = [
     url(
-        r'bank/update/^(?P<pk>\d+)$',
+        r'^bank/update/(?P<pk>\d+)$',
         BankUpdateFileDetailView.as_view(),
         name='bank-update-file'
     ),

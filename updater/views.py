@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
@@ -27,7 +28,7 @@ class BankUpdateFileProcess(RedirectView):
         bankupdatefile.process()
         messages.info(
             self.request,
-            _(u'Actualización Completada')
+            _('Actualización Completada')
         )
 
         return reverse('bank-update-file-index')
