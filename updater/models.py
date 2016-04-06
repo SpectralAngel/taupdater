@@ -1,12 +1,17 @@
 # -*- coding: utf8 -*-
+from __future__ import unicode_literals
+
+from collections import defaultdict
 from decimal import Decimal
+
+import unicodecsv as csv
+from bridge.models import Banco, Account, Affiliate
 from django.conf import settings
+from django.core.files.storage import default_storage as storage
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
-from sqlobject import sqlhub
-from actaf import database, parsers
-from bridge.models import Banco
 
 
 @python_2_unicode_compatible
@@ -17,59 +22,82 @@ class BankUpdateFile(TimeStampedModel):
     fecha_de_procesamiento = models.DateField()
     procesado = models.BooleanField(default=False)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL)
+    cuenta_colegiacion = models.ForeignKey(Account, blank=True, null=True,
+                                           related_name='colegiacion_set')
+    cuenta_prestamo = models.ForeignKey(Account, blank=True, null=True,
+                                        related_name='prestamo_set')
+    cuenta_excedente = models.ForeignKey(Account, blank=True, null=True,
+                                         related_name='excedente_set')
+    usar_id = models.BooleanField(default=True)
+    cobrar_colegiacion = models.BooleanField(default=True)
 
     def __str__(self):
-        return u'{0} - {1}'.format(
+        return '{0} - {1}'.format(
             self.banco.nombre,
             self.fecha_de_cobro.strftime(u'%Y/%m/%d')
         )
 
     def process(self):
+        """
+        Processes the information inside the file to update the payments of a
+        :class:`Affiliate`
+        :return:
+        """
         if self.procesado:
             return
 
-        banco = database.Banco.get(self.banco.id)
+        reader = csv.reader(storage.open(self.archivo.name, 'rU'))
 
-        accounts = {}
-        for account in database.get_accounts():
-            accounts[account] = {'number': 0, 'amount': Decimal()}
+        afiliados = {}
+        afiliado_identidad = {}
+        pagos = defaultdict(Decimal)
 
-        Parser = getattr(parsers, banco.parser)
-        parser = Parser(self.fecha_de_procesamiento, self.archivo.name, banco)
-        parsed = parser.output()
+        for afiliado in Affiliate.objects.all():
+            afiliados[afiliado.id] = afiliado
+            identidad = afiliado.card_id.replace('-', '')
+            afiliado_identidad[identidad] = afiliado
 
-        obligacion = database.get_obligation(self.fecha_de_procesamiento.year,
-                                             self.fecha_de_procesamiento.month)
-        jubilados = database.get_compliment(
-            self.fecha_de_procesamiento.year,
-            self.fecha_de_procesamiento.month,
-            True
-        )
+        for row in reader:
 
-        alternativos = database.get_compliment(
-            self.fecha_de_procesamiento.year,
-            self.fecha_de_procesamiento.month,
-            False
-        )
+            amount = Decimal(row[2].replace(',', ''))
+            try:
+                if self.usar_id:
+                    afiliado = afiliados[int(row[0])]
+                else:
+                    identidad = '{0:013d}'.format(int(row[0].replace('-', '')))
+                    afiliado = afiliado_identidad[identidad]
 
-        updater = parsers.ActualizadorBancario(
-            obligacion,
-            accounts,
-            self.fecha_de_procesamiento,
-            banco,
-            self.fecha_de_cobro,
-            jubilados,
-            alternativos
-        )
+                pagos[afiliado] += amount
 
-        updater.registrar_cuenta(database.get_loan_account(), 'prestamo')
-        updater.registrar_cuenta(database.get_cuota_account(), 'cuota')
-        updater.registrar_cuenta(database.get_incomplete_account(),
-                                 'incomplete')
-        updater.registrar_cuenta(database.get_exceding_account(), 'excedente')
-        updater.registrar_cuenta(database.get_inprema_account(), 'complemento')
+            except KeyError as key_error:
+                error = ErrorLectura()
+                error.bank_update_file = self
+                error.no_encontrado = row[0]
+                error.monto = amount
+                error.save()
 
-        [updater.update(i, banco.cuota) for i in parsed]
+        for afiliado in pagos:
+            afiliado.pagar(self.fecha_de_cobro, self.fecha_de_procesamiento,
+                           pagos[afiliado], self.banco, self.cuenta_colegiacion,
+                           self.cuenta_prestamo, self.cuenta_excedente,
+                           self.cobrar_colegiacion, banco=True)
 
         self.procesado = True
         self.save()
+
+
+@python_2_unicode_compatible
+class ErrorLectura(TimeStampedModel):
+    """
+    Registra los errores de parseo correspondientes a un archivo de
+    actualizacion bancaria
+    """
+    bank_update_file = models.ForeignKey(BankUpdateFile)
+    no_encontrado = models.CharField(max_length=255)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return _('{0} {1}').format(
+            self.bank_update_file.banco.nombre,
+            self.no_encontrado
+        )
