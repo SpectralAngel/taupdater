@@ -97,6 +97,10 @@ class Generator(object):
 
         return create_csv_response(rows, self.banco.nombre)
 
+    def clients(self):
+
+        return create_text_response([], self.banco.nombre)
+
 
 class Occidente(Generator):
     def __init__(self, banco, afiliados, fecha):
