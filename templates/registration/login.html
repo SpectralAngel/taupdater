@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load i18n %}{% load l10n %}
+    <title>{% trans 'Taupdater' %}</title>
+    {% load staticfiles %}{% load tz %}{% load l10n %}{% load i18n %}{% load add_class %}
+    {% include 'styles.html' %}
+    <!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="{% static 'img/favicon.png' %}">
+</head>
+<body>
+{% include 'javascript.html' %}
+<div id="content" class="container">
+    {% if messages %}
+        <div id="system-message" class="row">
+            <div class="col-md-12">
+                {% for message in messages %}
+                    <div class="alert alert-warning alert-dismissible {% if message.tags %} {{ message.tags }} {% endif %} "
+                         role="alert">
+                        <button type="button" class="close" data-dismiss="alert"
+                                aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="col-md-6 col-xs-6 col-md-offset-3 col-xs-offset-3">
+        <form role="form" action="." method="post"> {% csrf_token %}
+            <h1>{% trans 'Gestor de Actualizaciones' %}</h1>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors|join:"<br \>" }}</div>
+            {% endif %}
+            {% for field in form %}
+                <div class="form-group {% if field.errors %}has-error{% endif %}">
+                    {{ field.label_tag|add_class:"control-label" }}
+                    {% if field.help_text %}
+                        <span class="help-block">{{ field.help_text }}</span>
+                    {% endif %}
+                    {% if field.errors %}
+                        <span class="help-block">{{ field.errors|join:"<br \>" }}</span>
+                    {% endif %}
+                    {{ field|add_class:"form-control" }}
+                </div>
+            {% endfor %}
+            <input class="btn btn-success" type="submit"
+                   value="{% trans 'Iniciar Sesi&oacute;n' %}">
+        </form>
+    </div>
+</div>
+</body>
+</html>
