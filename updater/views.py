@@ -45,3 +45,11 @@ class BancoListView(LoginRequiredMixin, ListView):
     Shows the UI to handle the :class:`Banco`
     """
     model = Banco
+
+
+class BancoDetailView(LoginRequiredMixin, DetailView):
+    """
+    Displays the :class:`Banco` data along with the forms to make te billing
+    statements
+    """
+    model = Banco
