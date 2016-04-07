@@ -32,4 +32,10 @@ urlpatterns = [
         views.BancoDetailView.as_view(),
         name='banco-detail'
     ),
+
+    url(
+        r'^bank/bill$',
+        views.BancoBillingView.as_view(),
+        name='banco-bill'
+    ),
 ]

@@ -31,7 +31,8 @@ class CobroGenerarForm(FieldSetFormMixin):
     Builds a form that allows the user to generate files to be sent to financial
     institutions for payment.
     """
-    banco = forms.ModelChoiceField(Banco.objects.all())
+    banco = forms.ModelChoiceField(Banco.objects.all(),
+                                   widget=forms.HiddenInput())
     fecha = forms.DateField(widget=DateTimePicker(
         options={"format": "YYYY-MM-DD", "pickTime": False})
     )
