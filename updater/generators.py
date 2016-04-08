@@ -37,20 +37,20 @@ def create_csv_response(rows, nombre):
 
 
 def create_text_response(rows, nombre):
-    response = StreamingHttpResponse(content_type="text")
+    response = StreamingHttpResponse(rows, content_type="text")
     response[
         'Content-Disposition'] = 'attachment; filename="{0}.txt"'.format(
         nombre
     )
-    [response.write(row) for row in rows]
     return response
 
 
 class Generator(object):
-    def __init__(self, banco, afiliados, fecha):
+    def __init__(self, banco, afiliados, fecha, colegiacion):
         self.afiliados = afiliados
         self.fecha = fecha
         self.banco = banco
+        self.solo_prestamos = ~colegiacion
 
     def generate(self):
         """
@@ -58,7 +58,7 @@ class Generator(object):
         :return: A StreamingHttpResponse that contains the generated File
         """
 
-        rows = ([str(a.id),
+        rows = ([a.id,
                  "{0} {1}".format(a.first_name, a.last_name),
                  a.cardID,
                  a.get_monthly(self.fecha, True),
@@ -73,10 +73,10 @@ class Generator(object):
         rows = ([a.id,
                  a.cardID.replace('-', ''),
                  "{0} {1}".format(a.first_name, a.last_name),
-                 a.get_monthly(self.fecha, True),
+                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
                  0,
                  0,
-                 a.get_monthly(self.fecha, True),
+                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
                  ]
                 for a in self.afiliados)
         rows = filter_rows(rows)
@@ -87,7 +87,7 @@ class Generator(object):
         rows = ([a.id,
                  a.card_id.replace('-', ''),
                  "{0} {1}".format(a.fist_name, a.last_name),
-                 str(a.get_monthly(self.fecha)),
+                 str(a.get_monthly(self.fecha, loan_only=self.solo_prestamos)),
                  a.phone,
                  a.email,
                  a.get_monthly(),
@@ -98,7 +98,6 @@ class Generator(object):
         return create_csv_response(rows, self.banco.nombre)
 
     def clients(self):
-
         return create_text_response([], self.banco.nombre)
 
 
@@ -133,7 +132,7 @@ class Occidente(Generator):
                 self.fecha.month,
                 self.fecha.day,
                 int(afiliado.get_monthly(
-                    self.fecha_cuota, True
+                    self.fecha_cuota, True, loan_only=self.solo_prestamos
                 ) * Decimal("100"))
             )
             rows.append(row)
@@ -187,15 +186,16 @@ class Atlantida(Generator):
         charges = []
 
         for afiliado in self.afiliados:
-            if not afiliado.autorizacion:
+            if not afiliado.autorizacion_set.count() > 0:
                 continue
             charges.append(self.format.format(
                 int(self.banco.codigo),
                 afiliado.id,
                 "",
                 1,
-                int(afiliado.get_monthly(self.fecha, True) * Decimal(
-                    "100")),
+                int(afiliado.get_monthly(
+                    self.fecha, True, loan_only=self.solo_prestamos
+                ) * Decimal("100")),
                 "LPS",
                 "Cuota de Aportaciones COPEMH",
                 '',
@@ -227,7 +227,8 @@ class INPREMA(Generator):
                     self.fecha.month,
                     afiliado.card_id.replace('-', ''),
                     11,
-                    afiliado.get_monthly(self.fecha)
+                    afiliado.get_monthly(self.fecha,
+                                         loan_only=self.solo_prestamos)
                 )
             )
 
@@ -235,7 +236,6 @@ class INPREMA(Generator):
 
 
 class Banhcafe(Generator):
-
     def generate(self):
         CobroBancarioBanhcafe.objects.all().delete()
         for afiliado in self.afiliados:
@@ -256,7 +256,8 @@ class Pais(Generator):
                  "{0} {1}".format(a.firstName, a.lastName),
                  str(a.cuenta),
                  str(a.bancario),
-                 str(a.get_monthly(self.fecha, True)),
+                 str(a.get_monthly(self.fecha, True,
+                                   loan_only=self.solo_prestamos)),
                  str(a.last)] for a in self.afiliados
                 if a.autorizacion)
 
@@ -282,8 +283,10 @@ class Ficensa(Generator):
             charges.append(self.format.format(
                 self.fecha.strftime("%Y%m"),
                 afiliado.card_id.replace('-', ''),
-                int(afiliado.get_monthly(self.fecha, True) * Decimal(
-                    "100")),
+                int(afiliado.get_monthly(self.fecha, True,
+                                         loan_only=self.solo_prestamos
+                                         ) * Decimal("100")
+                    ),
                 nombre_afiliado,
                 'Aportaciones',
                 afiliado.id,
@@ -315,7 +318,7 @@ class Trabajadores(Generator):
         line = ([a.id,
                  "{0} {1}".format(a.first_name, a.last_name),
                  a.cardID,
-                 a.get_monthly(self.fecha, True, True),
+                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
                  '50',
                  a.cuenta
                  ] for a in self.afiliados)

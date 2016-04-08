@@ -34,9 +34,9 @@ class CobroGenerarForm(FieldSetFormMixin):
     banco = forms.ModelChoiceField(Banco.objects.all(),
                                    widget=forms.HiddenInput())
     fecha = forms.DateField(widget=DateTimePicker(
-        options={"format": "YYYY-MM-DD", "pickTime": False})
+        options={"format": "YYYY-MM-DD"})
     )
-    cobrar_colegiacion = forms.BooleanField()
+    cobrar_colegiacion = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(CobroGenerarForm, self).__init__(*args, **kwargs)

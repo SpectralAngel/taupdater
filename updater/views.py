@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from bridge.models import Banco
+from bridge.models import Banco, build_obligation_map
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
@@ -14,6 +14,8 @@ from django.views.generic.edit import FormView
 from updater.forms import CobroGenerarForm
 from updater.models import BankUpdateFile
 import generators
+
+build_obligation_map()
 
 
 class BankUpdateFileDetailView(LoginRequiredMixin, DetailView):
@@ -47,6 +49,7 @@ class BancoListView(LoginRequiredMixin, ListView):
     Shows the UI to handle the :class:`Banco`
     """
     model = Banco
+    template_name = 'updater/bank_list.html'
 
 
 class BancoDetailView(LoginRequiredMixin, DetailView):
@@ -55,12 +58,19 @@ class BancoDetailView(LoginRequiredMixin, DetailView):
     statements
     """
     model = Banco
+    template_name = 'updater/bank_detail.html'
 
     def get_context_data(self, **kwargs):
+        context = super(BancoDetailView, self).get_context_data(**kwargs)
         form = CobroGenerarForm(initial={
             'banco': self.object
         })
         form.helper.form_action = 'banco-bill'
+        form.set_legend(_('Crear Archivo de Cobro'))
+
+        context['form'] = form
+
+        return context
 
 
 class BancoBillingView(LoginRequiredMixin, FormView):
@@ -70,7 +80,6 @@ class BancoBillingView(LoginRequiredMixin, FormView):
     form_class = CobroGenerarForm
 
     def form_valid(self, form):
-
         banco = form.cleaned_data['banco']
         fecha = form.cleaned_data['fecha']
 

@@ -24,13 +24,13 @@ urlpatterns = [
     url(
         r'^bank/list$',
         views.BancoListView.as_view(),
-        name='banco-list'
+        name='banco-update-list'
     ),
 
     url(
         r'^bank/(?P<pk>\d+)$',
         views.BancoDetailView.as_view(),
-        name='banco-detail'
+        name='banco-update-detail'
     ),
 
     url(

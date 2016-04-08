@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
-{% load staticfiles %}
 {% block content %}
-{% load crispy_forms_tags %}{% load l10n %}{% load i18n %}
+{% load crispy_forms_tags %}{% load l10n %}{% load i18n %}{% load staticfiles %}
     <div class="row">
         <div class="col-md-12">
             <table class="table table-striped">
@@ -20,7 +19,9 @@
                         <td>{{ object.fecha_de_cobro }}</td>
                         <td>{{ object.fecha_de_procesamiento }}</td>
                         <td>
-                            <a class="btn btn-primary" href="{% url 'bank-update-file-process' object.id %}">Procesar</a>
+                            <a class="btn btn-primary" href="{% url 'bank-update-file-process' object.id %}">
+                                {% trans 'Procesar' %}
+                            </a>
                         </td>
                     </tr>
                 {% endfor %}
