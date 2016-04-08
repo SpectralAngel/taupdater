@@ -82,9 +82,11 @@ class BancoBillingView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         banco = form.cleaned_data['banco']
         fecha = form.cleaned_data['fecha']
+        cobrar_colegiacion = form.cleaned_data['cobrar_colegiacion']
 
         gen_class = getattr(generators, banco.generator, generators.Generator)
 
-        generator = gen_class(banco, banco.affiliate_set.all(), fecha)
+        generator = gen_class(banco, banco.affiliate_set.all(), fecha,
+                              cobrar_colegiacion)
 
         return generator.generate()
