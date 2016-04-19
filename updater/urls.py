@@ -38,4 +38,10 @@ urlpatterns = [
         views.BancoBillingView.as_view(),
         name='banco-bill'
     ),
+
+    url(
+        r'^bank/client$',
+        views.BancoClientView.as_view(),
+        name='banco-client'
+    ),
 ]

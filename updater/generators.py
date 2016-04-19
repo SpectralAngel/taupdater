@@ -50,7 +50,10 @@ class Generator(object):
         self.afiliados = afiliados
         self.fecha = fecha
         self.banco = banco
-        self.solo_prestamos = ~colegiacion
+        if colegiacion:
+            self.solo_prestamos = False
+        else:
+            self.solo_prestamos = True
 
     def generate(self):
         """
@@ -60,7 +63,7 @@ class Generator(object):
 
         rows = ([a.id,
                  "{0} {1}".format(a.first_name, a.last_name),
-                 a.cardID,
+                 a.card_id,
                  a.get_monthly(self.fecha, True),
                  a.cuenta]
                 for a in self.afiliados)
@@ -102,9 +105,9 @@ class Generator(object):
 
 
 class Occidente(Generator):
-    def __init__(self, banco, afiliados, fecha):
+    def __init__(self, banco, afiliados, fecha, colegiacion):
 
-        super(Occidente, self).__init__(banco, afiliados, fecha)
+        super(Occidente, self).__init__(banco, afiliados, fecha, colegiacion)
         self.format = "{0:012d}{1:18}{2:12d}{3:<30}{4:<20}{5:04d}{6:02d}{7:02d}{8:013d} \n"
         month = self.fecha.month + 3
         year = self.fecha.year
@@ -141,21 +144,22 @@ class Occidente(Generator):
 
 
 class Atlantida(Generator):
-    def __init__(self, banco, afiliados, fecha):
+    def __init__(self, banco, afiliados, fecha, colegiacion):
 
-        super(Atlantida, self).__init__(banco, afiliados, fecha)
+        super(Atlantida, self).__init__(banco, afiliados, fecha, colegiacion)
         self.cformat = "{0:<16}{1:2}{2:1}{3:05d}{4:8}{5:15}{6:40}"
         self.cformat += "{7:3}{8:40}{9:19}{10:12}{11:2}{12:03d}{13:16}\n"
 
         self.format = "{0:05d}{1:<16}{2:<16}{3:03d}{4:016d}{5:3}{6:<40}"
         self.format += "{7:<9}{8:<9}\n"
+        self.cobrar_colegiacion = colegiacion
 
     def clients(self):
 
         clients = []
 
         for afiliado in self.afiliados:
-            if not afiliado.autorizacion:
+            if not afiliado.autorizacion_set.count() > 0:
                 continue
 
             nombre_afiliado = "{0} {1}".format(afiliado.first_name,
@@ -169,7 +173,7 @@ class Atlantida(Generator):
                 "A",
                 int(self.banco.codigo),
                 0,
-                afiliado.cardID,
+                afiliado.card_id,
                 afiliado.get_email(),
                 "LPS",
                 nombre_afiliado,
@@ -180,7 +184,8 @@ class Atlantida(Generator):
                 ""
             ))
 
-        return create_text_response(clients, self.banco.nombre)
+        return create_text_response(clients,
+                                    '{0}-clientes'.format(self.banco.nombre))
 
     def generate(self):
         charges = []
@@ -247,30 +252,30 @@ class Banhcafe(Generator):
 
 
 class Pais(Generator):
-    def __init__(self, banco, afiliados, fecha):
-        super(Pais, self).__init__(banco, afiliados, fecha)
+    def __init__(self, banco, afiliados, fecha, colegiacion):
+        super(Pais, self).__init__(banco, afiliados, fecha, colegiacion)
 
     def generate(self):
         rows = ([str(a.id),
-                 a.cardID.replace('-', ''),
-                 "{0} {1}".format(a.firstName, a.lastName),
+                 a.card_id.replace('-', ''),
+                 "{0} {1}".format(a.first_name, a.last_name),
                  str(a.cuenta),
                  str(a.bancario),
                  str(a.get_monthly(self.fecha, True,
                                    loan_only=self.solo_prestamos)),
                  str(a.last)] for a in self.afiliados
-                if a.autorizacion)
+                if a.autorizacion_set.count() > 0)
 
         return create_csv_response(rows, self.banco)
 
 
 class Ficensa(Generator):
-    def __init__(self, banco, afiliados, fecha):
+    def __init__(self, banco, afiliados, fecha, colegiacion):
 
-        super(Ficensa, self).__init__(banco, afiliados, fecha)
+        super(Ficensa, self).__init__(banco, afiliados, fecha, colegiacion)
         self.format = "{0}{1:13}APO{02:8d}{3:<40}{4:<20}{5:08d} {6:015d}\n"
 
-    def generator(self):
+    def generate(self):
 
         charges = []
 
@@ -317,9 +322,9 @@ class Trabajadores(Generator):
     def generate(self):
         line = ([a.id,
                  "{0} {1}".format(a.first_name, a.last_name),
-                 a.cardID,
+                 a.card_id,
                  a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
-                 '50',
+                 '0',
                  a.cuenta
                  ] for a in self.afiliados)
 
