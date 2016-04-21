@@ -52,7 +52,9 @@ class BankUpdateFile(TimeStampedModel):
         afiliado_identidad = {}
         pagos = defaultdict(Decimal)
 
-        for afiliado in Affiliate.objects.all():
+        todos = Affiliate.objects.filter(card_id__isnull=False)
+
+        for afiliado in todos:
             afiliados[afiliado.id] = afiliado
             identidad = afiliado.card_id.replace('-', '')
             afiliado_identidad[identidad] = afiliado
