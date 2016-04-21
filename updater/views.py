@@ -5,6 +5,7 @@ from bridge.models import Banco, build_obligation_map
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import RedirectView
@@ -31,8 +32,13 @@ class BankUpdateFileListView(LoginRequiredMixin, ListView):
 
 
 class BankUpdateFileProcess(LoginRequiredMixin, RedirectView):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
     permanent = False
 
+    @transaction.atomic
     def get_redirect_url(self, *args, **kwargs):
         bankupdatefile = get_object_or_404(BankUpdateFile, pk=kwargs['pk'])
         bankupdatefile.process()
