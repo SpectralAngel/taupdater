@@ -52,7 +52,17 @@ class BankUpdateFile(TimeStampedModel):
         afiliado_identidad = {}
         pagos = defaultdict(Decimal)
 
-        todos = Affiliate.objects.filter(card_id__isnull=False)
+        todos = Affiliate.objects.select_related(
+            'cotizacion',
+            'banco',
+        ).prefetch_related(
+            'loan_set',
+            'loan_set__pay_set',
+            'loan_set__deduction_set',
+            'loan_set__deduction_set__account',
+            'extra_set',
+            'extra_set__account',
+        ).filter(card_id__isnull=False)
 
         for afiliado in todos:
             afiliados[afiliado.id] = afiliado
