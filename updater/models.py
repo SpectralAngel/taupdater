@@ -58,6 +58,7 @@ class BankUpdateFile(TimeStampedModel):
         ).prefetch_related(
             'loan_set',
             'loan_set__pay_set',
+            'loan_set__casa',
             'loan_set__deduction_set',
             'loan_set__deduction_set__account',
             'extra_set',
