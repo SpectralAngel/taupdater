@@ -88,6 +88,19 @@ class BancoDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+def build_generator(banco, cobrar_colegiacion, fecha):
+    gen_class = getattr(generators, banco.generator, generators.Generator)
+    generator = gen_class(
+        banco,
+        banco.affiliate_set.filter(
+            cuenta__isnull=False,
+        ).exclude(cuenta__exact=''),
+        fecha,
+        cobrar_colegiacion
+    )
+    return generator
+
+
 class BancoBillingView(LoginRequiredMixin, FormView):
     """
     Creates the billing for the specified :class:`Banco`
@@ -99,18 +112,7 @@ class BancoBillingView(LoginRequiredMixin, FormView):
         fecha = form.cleaned_data['fecha']
         cobrar_colegiacion = form.cleaned_data['cobrar_colegiacion']
 
-        gen_class = getattr(generators, banco.generator, generators.Generator)
-        print(banco.generator)
-        print(gen_class)
-
-        generator = gen_class(
-            banco,
-            banco.affiliate_set.filter(
-                cuenta__isnull=False,
-            ).exclude(cuenta__exact=''),
-            fecha,
-            cobrar_colegiacion
-        )
+        generator = build_generator(banco, cobrar_colegiacion, fecha)
 
         return generator.generate()
 
@@ -127,15 +129,6 @@ class BancoClientView(LoginRequiredMixin, FormView):
         fecha = form.cleaned_data['fecha']
         cobrar_colegiacion = form.cleaned_data['cobrar_colegiacion']
 
-        gen_class = getattr(generators, banco.generator, generators.Generator)
-
-        generator = gen_class(
-            banco,
-            banco.affiliate_set.filter(
-                cuenta__isnull=False,
-            ).exclude(cuenta__exact=''),
-            fecha,
-            cobrar_colegiacion
-        )
+        generator = build_generator(banco, cobrar_colegiacion, fecha)
 
         return generator.clients()
