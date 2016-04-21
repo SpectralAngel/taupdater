@@ -34,7 +34,7 @@ class BankUpdateFile(TimeStampedModel):
     def __str__(self):
         return '{0} - {1}'.format(
             self.banco.nombre,
-            self.fecha_de_cobro.strftime(u'%Y/%m/%d')
+            self.fecha_de_cobro.strftime('%Y/%m/%d')
         )
 
     def process(self):
