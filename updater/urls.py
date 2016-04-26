@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf.urls import url
 
 from updater import views
@@ -43,5 +44,17 @@ urlpatterns = [
         r'^bank/client$',
         views.BancoClientView.as_view(),
         name='banco-client'
+    ),
+
+    url(
+        r'^cotizacion/files$',
+        views.CotizacionUpdateFileList.as_view(),
+        name='cotizacion-file-index'
+    ),
+
+    url(
+        r'^cotizacion/update/(?P<pk>\d+)/procesar$',
+        views.CotizacionUpdateFileProcess.as_view(),
+        name='cotizacion-update-file-process'
     ),
 ]

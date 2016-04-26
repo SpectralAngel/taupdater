@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from bridge.models import Banco, build_obligation_map
+from bridge.models import Banco, build_obligation_map, Cotizacion
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
@@ -12,8 +12,8 @@ from django.views.generic.base import RedirectView
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.edit import FormView
 
-from updater.forms import CobroGenerarForm
-from updater.models import BankUpdateFile
+from updater.forms import CobroGenerarForm, CotizacionCobroGenerarForm
+from updater.models import BankUpdateFile, CotizacionUpdateFile
 import generators
 
 build_obligation_map()
@@ -132,3 +132,76 @@ class BancoClientView(LoginRequiredMixin, FormView):
         generator = build_generator(banco, cobrar_colegiacion, fecha)
 
         return generator.clients()
+
+
+class CotizacionDetail(LoginRequiredMixin, DetailView):
+    """
+    Shows the UI to create payments for :class:`Cotizacion`
+    """
+    model = Cotizacion
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds the form that will create the payment file
+        """
+        context = super(CotizacionDetail, self).get_context_data(**kwargs)
+        form = CobroGenerarForm(initial={
+            'cotizacion': self.object
+        })
+        form.helper.form_action = 'cotizacion-bill'
+        form.set_legend(_('Crear Archivo de Cobro'))
+
+        context['form'] = form
+
+        return context
+
+
+class CotizacionBillingView(LoginRequiredMixin, FormView):
+    """
+    Creates the billing for an specific :class:`Cotizacion`
+    """
+    form_class = CotizacionCobroGenerarForm
+
+    def form_valid(self, form):
+        cotizacion = form.cleaned_data['cotizacion']
+        fecha = form.cleaned_data['fecha']
+        cobrar_colegiacion = form.cleaned_data['cobrar_colegiacion']
+
+        gen_class = getattr(generators, cotizacion.generator,
+                            generators.Generator)
+        generator = gen_class(
+            cotizacion,
+            cotizacion.affiliate_set.all(),
+            fecha,
+            cobrar_colegiacion
+        )
+
+        return generator.clients()
+
+
+class CotizacionUpdateFileList(LoginRequiredMixin, ListView):
+    """
+    Displays a list of :class:`CotizacionUpdateFile` that are not yet processed
+    """
+    model = CotizacionUpdateFile
+    queryset = CotizacionUpdateFile.objects.filter(procesado=False)
+
+
+class CotizacionUpdateFileProcess(LoginRequiredMixin, RedirectView):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
+    permanent = False
+
+    @transaction.atomic
+    def get_redirect_url(self, *args, **kwargs):
+        cotizacionupdatefile = get_object_or_404(CotizacionUpdateFile,
+                                                 pk=kwargs['pk'])
+        cotizacionupdatefile.process()
+        messages.info(
+            self.request,
+            _('Actualización Completada')
+        )
+
+        return reverse('cotizacion-file-index')

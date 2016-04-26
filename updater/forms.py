@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from bootstrap3_datetime.widgets import DateTimePicker
-from bridge.models import Banco
+from bridge.models import Banco, Cotizacion
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, Submit
 from django import forms
@@ -40,4 +40,21 @@ class CobroGenerarForm(FieldSetFormMixin):
 
     def __init__(self, *args, **kwargs):
         super(CobroGenerarForm, self).__init__(*args, **kwargs)
+        self.helper.add_input(Submit('submit', _('Generar')))
+
+
+class CotizacionCobroGenerarForm(FieldSetFormMixin):
+    """
+    Builds a form that allows the user to generate files that will be sent to
+    external institutions to collect payment.
+    """
+    cotizacion = forms.ModelChoiceField(Cotizacion.objects.all(),
+                                        widget=forms.HiddenInput())
+    fecha = forms.DateField(widget=DateTimePicker(
+        options={"format": "YYYY-MM-DD"})
+    )
+    cobrar_colegiacion = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CotizacionCobroGenerarForm, self).__init__(*args, **kwargs)
         self.helper.add_input(Submit('submit', _('Generar')))
