@@ -57,4 +57,22 @@ urlpatterns = [
         views.CotizacionUpdateFileProcess.as_view(),
         name='cotizacion-update-file-process'
     ),
+
+    url(
+        r'^cotizacion/list$',
+        views.CotizacionListView.as_view(),
+        name='cotizacion-update-list'
+    ),
+
+    url(
+        r'^cotizacion/(?P<pk>\d+)$',
+        views.CotizacionDetailView.as_view(),
+        name='cotizacion-update-detail'
+    ),
+
+    url(
+        r'^cotizacion/bill$',
+        views.CotizacionBillingView.as_view(),
+        name='cotizacion-bill'
+    ),
 ]

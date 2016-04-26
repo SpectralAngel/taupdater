@@ -111,3 +111,4 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'authentication.User'
 MEDIA_ROOT = str(root.path('media'))
 MEDIA_URL = '/media/'
+LOGIN_REDIRECT_URL = '/'

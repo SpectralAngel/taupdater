@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% load crispy_forms_tags %}{% load l10n %}{% load i18n %}{% load staticfiles %}
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            {% trans 'Fuentes de Cotización' %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>{% trans 'Cotización' %}</th>
+                    <th>{% trans 'Cantidad de Afiliados' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for cotizacion in object_list %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'cotizacion-update-detail' cotizacion.id %}">
+                                {{ cotizacion.nombre }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ cotizacion.affiliate_set.count }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

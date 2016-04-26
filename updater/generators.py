@@ -211,11 +211,10 @@ class Atlantida(Generator):
 
 
 class INPREMA(Generator):
-    def __init__(self, afiliados, fecha, append=False):
+    def __init__(self, cotizacion, afiliados, fecha, colegiacion):
 
-        super(INPREMA, self).__init__(None, afiliados, fecha)
+        super(INPREMA, self).__init__(cotizacion, afiliados, fecha, colegiacion)
         self.format = "{0:4d}{1:02d}{2:13}00011{3:013}\r\n"
-        self.append = append
 
     def generate(self):
         identidad = 0
@@ -233,7 +232,8 @@ class INPREMA(Generator):
                     afiliado.card_id.replace('-', ''),
                     11,
                     afiliado.get_monthly(self.fecha,
-                                         loan_only=self.solo_prestamos)
+                                         loan_only=self.solo_prestamos,
+                                         cobrar_extras=False)
                 )
             )
 

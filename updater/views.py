@@ -134,18 +134,27 @@ class BancoClientView(LoginRequiredMixin, FormView):
         return generator.clients()
 
 
-class CotizacionDetail(LoginRequiredMixin, DetailView):
+class CotizacionListView(LoginRequiredMixin, ListView):
+    """
+    Shows a list of :class:`Cotizacion`
+    """
+    model = Cotizacion
+    template_name = 'updater/cotizacion_list.html'
+
+
+class CotizacionDetailView(LoginRequiredMixin, DetailView):
     """
     Shows the UI to create payments for :class:`Cotizacion`
     """
     model = Cotizacion
+    template_name = 'updater/cotizacion_detail.html'
 
     def get_context_data(self, **kwargs):
         """
         Adds the form that will create the payment file
         """
-        context = super(CotizacionDetail, self).get_context_data(**kwargs)
-        form = CobroGenerarForm(initial={
+        context = super(CotizacionDetailView, self).get_context_data(**kwargs)
+        form = CotizacionCobroGenerarForm(initial={
             'cotizacion': self.object
         })
         form.helper.form_action = 'cotizacion-bill'
@@ -176,7 +185,7 @@ class CotizacionBillingView(LoginRequiredMixin, FormView):
             cobrar_colegiacion
         )
 
-        return generator.clients()
+        return generator.generate()
 
 
 class CotizacionUpdateFileList(LoginRequiredMixin, ListView):
