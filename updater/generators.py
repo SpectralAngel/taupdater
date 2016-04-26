@@ -74,7 +74,7 @@ class Generator(object):
 
     def davivienda(self):
         rows = ([a.id,
-                 a.cardID.replace('-', ''),
+                 a.card_id.replace('-', ''),
                  "{0} {1}".format(a.first_name, a.last_name),
                  a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
                  0,
@@ -108,7 +108,7 @@ class Occidente(Generator):
     def __init__(self, banco, afiliados, fecha, colegiacion):
 
         super(Occidente, self).__init__(banco, afiliados, fecha, colegiacion)
-        self.format = "{0:012d}{1:18}{2:12d}{3:<30}{4:<20}{5:04d}{6:02d}{7:02d}{8:013d} \n"
+        self.format = "{0:012d}{1:18}{2:12d}{3:<30}{4:<20}{5:04d}{6:02d}{7:02d}{8:013d} \r\n"
         month = self.fecha.month + 3
         year = self.fecha.year
         if month > 12:
@@ -148,10 +148,10 @@ class Atlantida(Generator):
 
         super(Atlantida, self).__init__(banco, afiliados, fecha, colegiacion)
         self.cformat = "{0:<16}{1:2}{2:1}{3:05d}{4:8}{5:15}{6:40}"
-        self.cformat += "{7:3}{8:40}{9:19}{10:12}{11:2}{12:03d}{13:16}\n"
+        self.cformat += "{7:3}{8:40}{9:19}{10:12}{11:2}{12:03d}{13:16}\r\n"
 
         self.format = "{0:05d}{1:<16}{2:<16}{3:03d}{4:016d}{5:3}{6:<40}"
-        self.format += "{7:<9}{8:<9}\n"
+        self.format += "{7:<9}{8:<9}\r\n"
         self.cobrar_colegiacion = colegiacion
 
     def clients(self):
@@ -214,7 +214,7 @@ class INPREMA(Generator):
     def __init__(self, afiliados, fecha, append=False):
 
         super(INPREMA, self).__init__(None, afiliados, fecha)
-        self.format = "{0:4d}{1:02d}{2:13}00011{3:013}\n"
+        self.format = "{0:4d}{1:02d}{2:13}00011{3:013}\r\n"
         self.append = append
 
     def generate(self):
@@ -222,7 +222,7 @@ class INPREMA(Generator):
         rows = []
 
         for afiliado in self.afiliados:
-            if afiliado.cardID is None or afiliado.cardID == '0':
+            if afiliado.card_id is None or afiliado.card_id == '0':
                 identidad += 1
                 continue
 
@@ -246,7 +246,7 @@ class Banhcafe(Generator):
         for afiliado in self.afiliados:
             cobro = CobroBancarioBanhcafe(
                 cantidad=afiliado.get_monthly(),
-                identidad=afiliado.cardID.replace('-', '')
+                identidad=afiliado.card_id.replace('-', '')
             )
             cobro.save()
 
@@ -273,7 +273,7 @@ class Ficensa(Generator):
     def __init__(self, banco, afiliados, fecha, colegiacion):
 
         super(Ficensa, self).__init__(banco, afiliados, fecha, colegiacion)
-        self.format = "{0}{1:13}APO{02:8d}{3:<40}{4:<20}{5:08d} {6:015d}\n"
+        self.format = "{0}{1:13}APO{02:8d}{3:<40}{4:<20}{5:08d} {6:015d}\r\n"
 
     def generate(self):
 
@@ -308,7 +308,7 @@ class UPN(Generator):
         self.afiliados = afiliados
 
     def generate(self):
-        line = ([a.cardID,
+        line = ([a.card_id,
                  "{0} {1}".format(a.first_name, a.last_name),
                  a.escalafon,
                  a.get_monthly(self.fecha, True)] for a in self.afiliados)
