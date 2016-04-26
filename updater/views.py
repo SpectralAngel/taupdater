@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from bridge.models import Banco, build_obligation_map, Cotizacion
+from bridge.models import Banco, build_obligation_map, Cotizacion, CuotaTable, \
+    CuentaRetrasada, Obligation, Extra
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
 from django.db import transaction
+from django.db.models.aggregates import Min, Sum
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import RedirectView
 from django.utils.translation import ugettext_lazy as _
@@ -214,3 +217,62 @@ class CotizacionUpdateFileProcess(LoginRequiredMixin, RedirectView):
         )
 
         return reverse('cotizacion-file-index')
+
+
+class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
+    permanent = False
+
+    @transaction.atomic
+    def get_redirect_url(self, *args, **kwargs):
+        cotizacion = get_object_or_404(Cotizacion, pk=kwargs['pk'])
+        years = {}
+        first_year = CuotaTable.objects.aggregate(
+            minimo=Min('year')
+        )['minimo']
+        current_year = timezone.now().year
+        current_month = timezone.now().month
+
+        for n in range(first_year, current_year + 1):
+            years[n] = {}
+            for m in range(1, 13):
+                if n == current_year and m >= current_month:
+                    break
+                years[n][m] = {}
+
+                try:
+                    years[n][m]['cuenta'] = CuentaRetrasada.filter(
+                        mes=m,
+                        anio=n,
+                    ).first().account
+                    years[n][m]['obligacion'] = Obligation.objects.filter(
+                        month=m,
+                        year=n,
+                    ).aggregate(
+                        total=Sum('amount')
+                    )['amount']
+                except:
+                    print(n, m)
+
+        for afiliado in cotizacion.affiliate_set.all():
+            cuota = afiliado.get_delayed()
+            if cuota:
+                mes = cuota.delayed()
+                anio = cuota.year
+                cuenta = years[anio][mes]['cuenta']
+                monto = years[anio][mes]['obligacion']
+
+                extra = Extra()
+                extra.affiliate = afiliado
+                extra.mes = mes
+                extra.anio = anio
+                extra.amount = monto
+                extra.retrasada = True
+                extra.account = cuenta
+                extra.save()
+
+        messages.info(
+            self.request,
+            _('Calculo de retrasadas completado')
+        )
+
+        return reverse('cotizacion-update-detail', args=[cotizacion.id])

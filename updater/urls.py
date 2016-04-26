@@ -75,4 +75,10 @@ urlpatterns = [
         views.CotizacionBillingView.as_view(),
         name='cotizacion-bill'
     ),
+
+    url(
+        r'^retrasadas/crear$',
+        views.RetrasadasCrearView.as_view(),
+        name='retrasadas-crear'
+    ),
 ]
