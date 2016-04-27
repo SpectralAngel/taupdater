@@ -6,9 +6,12 @@ from decimal import Decimal
 
 import unicodecsv as csv
 from bridge.models import Banco, Account, Affiliate, Cotizacion
+from bridge.utils import Zero
 from django.conf import settings
 from django.core.files.storage import default_storage as storage
+from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models import Sum
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
@@ -214,4 +217,108 @@ class ErrorLecturaCotizacion(TimeStampedModel):
         return _('{0} {1}').format(
             self.cotizacion_update_file.cotizacion.nombre,
             self.no_encontrado
+        )
+
+
+@python_2_unicode_compatible
+class ComparacionBanco(TimeStampedModel):
+    """
+    Registra un archivo para verificar las diferencias entre lo ingresado a los
+    estados de cuenta y lo que en realidad se pago.
+    """
+    banco = models.ForeignKey(Banco)
+    fecha_inicial = models.DateField()
+    fecha_final = models.DateField()
+    archivo = models.FileField(upload_to='compare/%Y/%m/%d')
+    usar_id = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.banco.nombre
+
+    def get_absolute_url(self):
+
+        return reverse('comparacion-banco-detail', args=[self.id])
+
+    def process(self):
+
+        self.diferenciabanco_set.all().delete()
+
+        reader = csv.reader(storage.open(self.archivo.name, 'rU'))
+
+        afiliados = {}
+        afiliado_identidad = {}
+        pagos = defaultdict(Decimal)
+
+        todos = Affiliate.objects.select_related(
+            'banco',
+        ).prefetch_related(
+            'deduccionbancaria_set'
+        ).filter(card_id__isnull=False)
+
+        for afiliado in todos:
+            afiliados[afiliado.id] = afiliado
+            identidad = afiliado.card_id.replace('-', '')
+            afiliado_identidad[identidad] = afiliado
+
+        for row in reader:
+
+            amount = Decimal(row[2].replace(',', ''))
+            try:
+                if self.usar_id:
+                    afiliado = afiliados[int(row[0])]
+                else:
+                    identidad = '{0:013d}'.format(int(row[0].replace('-', '')))
+                    afiliado = afiliado_identidad[identidad]
+
+                pagos[afiliado] += amount
+
+            except KeyError as key_error:
+                error = ErrorLectura()
+                error.bank_update_file = self
+                error.no_encontrado = row[0]
+                error.monto = amount
+                error.save()
+
+        for afiliado in pagos:
+            pago = pagos[afiliado]
+            deducciones = afiliado.deduccionbancaria_set.filter(
+                day__range=(self.fecha_inicial, self.fecha_final)
+            ).aggregate(
+                total=Sum('amount')
+            )['total']
+            if deducciones is None:
+                deducciones = Zero
+
+            diferencia = pago - deducciones
+            if diferencia != Zero:
+                registro = DiferenciaBanco(archivo=self, afiiado=afiliado,
+                                           diferencia=diferencia,
+                                           deducciones=deducciones,
+                                           monto_en_archivo=pago)
+                registro.save()
+
+    def total(self):
+
+        return self.diferenciabanco_set.aggregate(
+            total=Sum('diferencia')
+        )['total']
+
+
+@python_2_unicode_compatible
+class DiferenciaBanco(TimeStampedModel):
+    """
+    Registra las diferencias que se encontraron en las deducciones de un
+    afiliado y los que se encuentra en el archivo
+    """
+    archivo = models.ForeignKey(ComparacionBanco)
+    afiiado = models.ForeignKey(Affiliate)
+    diferencia = models.DecimalField(max_digits=10, decimal_places=2)
+    deducciones = models.DecimalField(max_digits=10, decimal_places=2)
+    monto_en_archivo = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return _('{0} {1} {2}').format(
+            self.afiiado.first_name,
+            self.afiiado.last_name,
+            self.diferencia
         )

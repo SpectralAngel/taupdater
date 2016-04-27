@@ -2,7 +2,6 @@ unicodecsv
 Django
 FormEncode
 MySQL-python
-SQLObject
 boto
 django-crispy-forms
 django-environ

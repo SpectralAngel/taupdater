@@ -54,7 +54,7 @@ urlpatterns = [
 
     url(
         r'^cotizacion/update/(?P<pk>\d+)/procesar$',
-        views.CotizacionUpdateFileProcess.as_view(),
+        views.CotizacionUpdateFileProcessView.as_view(),
         name='cotizacion-update-file-process'
     ),
 
@@ -80,5 +80,23 @@ urlpatterns = [
         r'^cotizacion/(?P<pk>\d+)retrasadas/crear$',
         views.RetrasadasCrearView.as_view(),
         name='retrasadas-crear'
+    ),
+
+    url(
+        r'^banco/comparaciones$',
+        views.ComparacionBancoListView.as_view(),
+        name='compracion-banco-list'
+    ),
+
+    url(
+        r'^banco/comparacion/(?P<pk>\d+)$',
+        views.ComparacionBancoDetailView.as_view(),
+        name='comparacion-banco-detail'
+    ),
+
+    url(
+        r'^banco/comparacion/(?P<pk>\d+)/procesar$',
+        views.ComparacionBancoProcessView.as_view(),
+        name='comparacion-banco-process'
     ),
 ]

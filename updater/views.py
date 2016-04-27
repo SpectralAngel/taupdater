@@ -16,7 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.edit import FormView
 
 from updater.forms import CobroGenerarForm, CotizacionCobroGenerarForm
-from updater.models import BankUpdateFile, CotizacionUpdateFile
+from updater.models import BankUpdateFile, CotizacionUpdateFile, \
+    ComparacionBanco
 import generators
 
 build_obligation_map()
@@ -199,7 +200,7 @@ class CotizacionUpdateFileList(LoginRequiredMixin, ListView):
     queryset = CotizacionUpdateFile.objects.filter(procesado=False)
 
 
-class CotizacionUpdateFileProcess(LoginRequiredMixin, RedirectView):
+class CotizacionUpdateFileProcessView(LoginRequiredMixin, RedirectView):
     """
     Applies the payments file to the :class:`Affiliate`s every payment
     corresponds to.
@@ -279,3 +280,36 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
         )
 
         return reverse('cotizacion-update-detail', args=[cotizacion.id])
+
+
+class ComparacionBancoListView(LoginRequiredMixin, ListView):
+    """
+    Shows a list of file available to make comparisons
+    """
+    model = ComparacionBanco
+
+
+class ComparacionBancoDetailView(LoginRequiredMixin, DetailView):
+    """
+    Shows the data for a :class:`ComparacionBanco`
+    """
+    model = ComparacionBanco
+
+
+class ComparacionBancoProcessView(LoginRequiredMixin, RedirectView):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
+    permanent = False
+
+    @transaction.atomic
+    def get_redirect_url(self, *args, **kwargs):
+        comparacion = get_object_or_404(ComparacionBanco, pk=kwargs['pk'])
+        comparacion.process()
+        messages.info(
+            self.request,
+            _('Actualización Completada')
+        )
+
+        return reverse('cotizacion-file-index')

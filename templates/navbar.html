@@ -14,18 +14,28 @@
             <ul class="nav navbar-nav">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        {% trans 'Afiliados' %} <b class="caret"></b>
+                        {% trans 'Pagos' %} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a href="{% url 'bank-update-file-index' %}">{% trans 'Bancos' %}</a></li>
                         <li><a href="{% url 'cotizacion-file-index' %}">{% trans 'Cotización' %}</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        {% trans 'Deducciones' %} <b class="caret"></b>
+                        {% trans 'Cobranza' %} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="{% url 'banco-update-list' %}">{% trans 'Bancos' %}</a></li>
+                        <li><a href="{% url 'cotizacion-update-list' %}">{% trans 'Cotizaciones' %}</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        {% trans 'Conciliacion' %} <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'compracion-banco-list' %}">{% trans 'Bancos' %}</a></li>
                         <li><a href="{% url 'cotizacion-update-list' %}">{% trans 'Cotizaciones' %}</a></li>
                     </ul>
                 </li>
