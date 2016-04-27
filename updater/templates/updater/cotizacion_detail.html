@@ -12,5 +12,10 @@
         <div class="col-md-4 col-xs-4">
             {% crispy form %}
         </div>
+        <div class="col-md-4 col-xs-4">
+            <a class="btn btn-success" href="{% url 'retrasadas-crear' cotizacion.id %}">
+                {% trans 'Calcular Retrasadas' %}
+            </a>
+        </div>
     </div>
 {% endblock %}

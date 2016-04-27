@@ -77,7 +77,7 @@ urlpatterns = [
     ),
 
     url(
-        r'^retrasadas/crear$',
+        r'^cotizacion/(?P<pk>\d+)retrasadas/crear$',
         views.RetrasadasCrearView.as_view(),
         name='retrasadas-crear'
     ),

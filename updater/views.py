@@ -220,6 +220,9 @@ class CotizacionUpdateFileProcess(LoginRequiredMixin, RedirectView):
 
 
 class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
+    """
+    Calculates the delayed payments for the every :class:`Affiliate`.
+    """
     permanent = False
 
     @transaction.atomic
