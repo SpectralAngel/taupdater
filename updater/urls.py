@@ -99,4 +99,22 @@ urlpatterns = [
         views.ComparacionBancoProcessView.as_view(),
         name='comparacion-banco-process'
     ),
+
+    url(
+        r'^complemento/(?P<pk>\d+)/cobro$',
+        views.BancoFaltanteCobroView.as_view(),
+        name='banco-faltante-cobro'
+    ),
+
+    url(
+        r'^complemento/(?P<pk>\d+)/clientes$',
+        views.BancoFaltanteClientView.as_view(),
+        name='banco-faltante-cliente'
+    ),
+
+    url(
+        r'^complemento/list$',
+        views.BancoFaltanteListView.as_view(),
+        name='bancofaltante-list'
+    ),
 ]

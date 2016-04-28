@@ -322,3 +322,30 @@ class DiferenciaBanco(TimeStampedModel):
             self.afiiado.last_name,
             self.diferencia
         )
+
+
+@python_2_unicode_compatible
+class BancoFaltante(TimeStampedModel):
+    """
+    Registers those who need to be charged again
+    """
+    archivo = models.FileField(upload_to='complemento/%Y/%m/%d')
+    banco = models.ForeignKey(Banco)
+    fecha_de_cobro = models.DateField()
+    cobrar_colegiacion = models.BooleanField(default=True)
+
+    def __str__(self):
+
+        return self.banco.nombre
+
+    def afiliados(self):
+        reader = csv.reader(storage.open(self.archivo.name, 'rU'))
+
+        afiliaciones = []
+
+        for line in reader:
+            afiliaciones.append(int(line[0]))
+
+        return Affiliate.objects.filter(
+            id__in=afiliaciones
+        )

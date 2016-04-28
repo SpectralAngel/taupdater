@@ -11,13 +11,13 @@ from django.db.models.aggregates import Min, Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
-from django.views.generic.base import RedirectView
+from django.views.generic.base import RedirectView, View
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.edit import FormView
 
 from updater.forms import CobroGenerarForm, CotizacionCobroGenerarForm
 from updater.models import BankUpdateFile, CotizacionUpdateFile, \
-    ComparacionBanco
+    ComparacionBanco, BancoFaltante
 import generators
 
 build_obligation_map()
@@ -313,3 +313,64 @@ class ComparacionBancoProcessView(LoginRequiredMixin, RedirectView):
         )
 
         return reverse('cotizacion-file-index')
+
+
+class BancoFaltanteListView(LoginRequiredMixin, ListView):
+    """
+    Shows a list of the files that have failure from charging
+    """
+    model = BancoFaltante
+
+
+class BancoFaltanteCobroView(LoginRequiredMixin, View):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
+
+    def dispatch(self, *args, **kwargs):
+        self.faltante = get_object_or_404(BancoFaltante, pk=kwargs['pk'])
+
+        return super(BancoFaltanteCobroView, self).dispatch(*args, **kwargs)
+
+    @transaction.atomic
+    def get(self, request, *args, **kwargs):
+        afiliados = self.faltante.afiliados()
+        print(afiliados)
+        banco = self.faltante.banco
+
+        gen_class = getattr(generators, banco.generator, generators.Generator)
+        generator = gen_class(
+            banco,
+            afiliados,
+            self.faltante.fecha_de_cobro,
+            self.faltante.cobrar_colegiacion,
+        )
+
+        return generator.generate()
+
+
+class BancoFaltanteClientView(LoginRequiredMixin, View):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
+
+    def dispatch(self, *args, **kwargs):
+        self.faltante = get_object_or_404(BancoFaltante, pk=kwargs['pk'])
+
+        return super(BancoFaltanteClientView, self).dispatch(*args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        afiliados = self.faltante.afiliados()
+        banco = self.faltante.banco
+
+        gen_class = getattr(generators, banco.generator, generators.Generator)
+        generator = gen_class(
+            banco,
+            afiliados,
+            self.faltante.fecha_de_cobro,
+            self.faltante.cobrar_colegiacion,
+        )
+
+        return generator.clients()

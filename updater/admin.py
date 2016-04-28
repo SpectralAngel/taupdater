@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 from updater.models import BankUpdateFile, ErrorLectura, ErrorLecturaCotizacion, \
-    CotizacionUpdateFile, ComparacionBanco, DiferenciaBanco
+    CotizacionUpdateFile, ComparacionBanco, DiferenciaBanco, BancoFaltante
 
 
 class BankUpdateFileAdmin(admin.ModelAdmin):
@@ -36,9 +36,14 @@ class ComparacionBancoAdmin(admin.ModelAdmin):
 class DiferenciaBancoAdmin(admin.ModelAdmin):
     list_display = ['archivo', 'diferencia', 'monto_en_archivo', 'deducciones']
 
+
+class BancoFaltanteAdmin(admin.ModelAdmin):
+    list_display = ['banco', 'archivo', 'fecha_de_cobro', 'cobrar_colegiacion']
+
 admin.site.register(BankUpdateFile, BankUpdateFileAdmin)
 admin.site.register(ErrorLectura, ErrorLecturaAdmin)
 admin.site.register(CotizacionUpdateFile, CotizacionUpdateFileAdmin)
 admin.site.register(ErrorLecturaCotizacion, ErrorLecturaCotizacionAdmin)
 admin.site.register(ComparacionBanco, ComparacionBancoAdmin)
 admin.site.register(DiferenciaBanco, DiferenciaBancoAdmin)
+admin.site.register(BancoFaltante, BancoFaltanteAdmin)
