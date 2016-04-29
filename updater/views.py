@@ -184,7 +184,10 @@ class CotizacionBillingView(LoginRequiredMixin, FormView):
                             generators.Generator)
         generator = gen_class(
             cotizacion,
-            cotizacion.affiliate_set.all(),
+            cotizacion.affiliate_set.exclude(
+                card_id__isnull=True,
+                card_id__iexact=''
+            ),
             fecha,
             cobrar_colegiacion
         )
