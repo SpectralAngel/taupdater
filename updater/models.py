@@ -273,11 +273,7 @@ class ComparacionBanco(TimeStampedModel):
                 pagos[afiliado] += amount
 
             except KeyError as key_error:
-                error = ErrorLectura()
-                error.bank_update_file = self
-                error.no_encontrado = row[0]
-                error.monto = amount
-                error.save()
+                pass
 
         for afiliado in pagos:
             pago = pagos[afiliado]

@@ -312,7 +312,7 @@ class ComparacionBancoProcessView(LoginRequiredMixin, RedirectView):
             _('Actualización Completada')
         )
 
-        return reverse('cotizacion-file-index')
+        return reverse(comparacion.get_absolute_url())
 
 
 class BancoFaltanteListView(LoginRequiredMixin, ListView):
