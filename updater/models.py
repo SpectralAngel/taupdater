@@ -273,7 +273,7 @@ class ComparacionBanco(TimeStampedModel):
                 pagos[afiliado] += amount
 
             except KeyError as key_error:
-                pass
+                print(key_error)
 
         for afiliado in pagos:
             pago = pagos[afiliado]
