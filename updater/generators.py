@@ -72,20 +72,6 @@ class Generator(object):
 
         return create_csv_response(rows, self.banco)
 
-    def davivienda(self):
-        rows = ([a.id,
-                 a.card_id.replace('-', ''),
-                 "{0} {1}".format(a.first_name, a.last_name),
-                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
-                 0,
-                 0,
-                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
-                 ]
-                for a in self.afiliados)
-        rows = filter_rows(rows)
-
-        return create_csv_response(rows, self.banco.nombre)
-
     def cobros(self):
         rows = ([a.id,
                  a.card_id.replace('-', ''),
@@ -329,5 +315,21 @@ class Trabajadores(Generator):
                  ] for a in self.afiliados)
 
         rows = filter_rows(line)
+
+        return create_csv_response(rows, self.banco.nombre)
+
+
+class Davivienda(Generator):
+    def generate(self):
+        rows = ([a.id,
+                 a.card_id.replace('-', ''),
+                 "{0} {1}".format(a.first_name, a.last_name),
+                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
+                 0,
+                 0,
+                 a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
+                 ]
+                for a in self.afiliados)
+        rows = filter_rows(rows)
 
         return create_csv_response(rows, self.banco.nombre)
