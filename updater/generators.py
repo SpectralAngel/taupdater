@@ -329,7 +329,7 @@ class Davivienda(Generator):
                  0,
                  a.get_monthly(self.fecha, True, loan_only=self.solo_prestamos),
                  ]
-                for a in self.afiliados)
+                for a in self.afiliados if a.card_id is not None)
         rows = filter_rows(rows)
 
         return create_csv_response(rows, self.banco.nombre)
