@@ -187,6 +187,9 @@ class CotizacionBillingView(LoginRequiredMixin, FormView):
             cotizacion.affiliate_set.exclude(
                 card_id__isnull=True,
                 card_id__iexact='',
+            ).select_related(
+                'extra_set',
+                'loan_set',
             ),
             fecha,
             cobrar_colegiacion
