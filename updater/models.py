@@ -86,6 +86,7 @@ class BankUpdateFile(TimeStampedModel):
                 pagos[afiliado] += amount
 
             except KeyError as key_error:
+                print(key_error)
                 error = ErrorLectura()
                 error.bank_update_file = self
                 error.no_encontrado = row[0]
@@ -242,6 +243,7 @@ class ComparacionBanco(TimeStampedModel):
     def process(self):
 
         self.diferenciabanco_set.all().delete()
+        self.errorcomparacionbanco_set.all().delete()
 
         reader = csv.reader(storage.open(self.archivo.name, 'rU'))
 
@@ -274,6 +276,11 @@ class ComparacionBanco(TimeStampedModel):
 
             except KeyError as key_error:
                 print(key_error)
+                error = ErrorComparacionBanco()
+                error.comparacion = self
+                error.no_encontrado = row[0]
+                error.monto = amount
+                error.save()
 
         for afiliado in pagos:
             pago = pagos[afiliado]
@@ -298,6 +305,22 @@ class ComparacionBanco(TimeStampedModel):
         return self.diferenciabanco_set.aggregate(
             total=Sum('diferencia')
         )['total']
+
+
+class ErrorComparacionBanco(TimeStampedModel):
+    """
+    Registra los errores de lectura que se han encontrado en la comparación de
+    los datos de un banco
+    """
+    comparacion = models.ForeignKey(ComparacionBanco)
+    no_encontrado = models.CharField(max_length=255)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return _('{0} {1}').format(
+            self.comparacion.banco.nombre,
+            self.no_encontrado
+        )
 
 
 @python_2_unicode_compatible
