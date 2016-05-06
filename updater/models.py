@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import unicodecsv as csv
 from bridge.models import Banco, Account, Affiliate, Cotizacion
@@ -288,6 +288,13 @@ class ComparacionBanco(TimeStampedModel):
                 error.comparacion = self
                 error.no_encontrado = row[0]
                 error.monto = amount
+                error.save()
+
+            except InvalidOperation as value_error:
+                print(value_error)
+                error = ErrorComparacionBanco()
+                error.comparacion = self
+                error.no_encontrado = '{0} {1}'.format(row[0], row[1])
                 error.save()
 
         for afiliado in pagos:
