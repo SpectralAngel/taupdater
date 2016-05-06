@@ -282,6 +282,14 @@ class ComparacionBanco(TimeStampedModel):
                 error.monto = amount
                 error.save()
 
+            except ValueError as value_error:
+                print(value_error)
+                error = ErrorComparacionBanco()
+                error.comparacion = self
+                error.no_encontrado = row[0]
+                error.monto = amount
+                error.save()
+
         for afiliado in pagos:
             pago = pagos[afiliado]
             deducciones = afiliado.deduccionbancaria_set.filter(
