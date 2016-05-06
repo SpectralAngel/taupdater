@@ -31,7 +31,7 @@ class ErrorLecturaCotizacionAdmin(admin.ModelAdmin):
 
 
 class ComparacionBancoAdmin(admin.ModelAdmin):
-    list_display = ['banco', 'fecha_inicial', 'fecha_final', 'archivo']
+    list_display = ['banco', 'created', 'fecha_inicial', 'fecha_final', 'archivo']
 
 
 class ErrorComparacionAdmin(admin.ModelAdmin):
