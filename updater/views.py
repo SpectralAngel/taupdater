@@ -100,7 +100,7 @@ def build_generator(banco, cobrar_colegiacion, fecha):
             cuenta__isnull=False,
         ).exclude(
             cuenta__exact='',
-            activo=False,
+            active=False,
         ),
         fecha,
         cobrar_colegiacion
@@ -190,7 +190,7 @@ class CotizacionBillingView(LoginRequiredMixin, FormView):
             cotizacion.affiliate_set.exclude(
                 card_id__isnull=True,
                 card_id__iexact='',
-                activo=False,
+                active=False,
             ).prefetch_related(
                 'extra_set',
                 'loan_set',
