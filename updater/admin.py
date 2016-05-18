@@ -39,7 +39,7 @@ class ErrorComparacionAdmin(admin.ModelAdmin):
 
 
 class DiferenciaBancoAdmin(admin.ModelAdmin):
-    list_display = ['archivo', 'diferencia', 'monto_en_archivo', 'deducciones']
+    list_display = ['archivo', 'afiiado', 'diferencia', 'monto_en_archivo', 'deducciones']
 
 
 class BancoFaltanteAdmin(admin.ModelAdmin):

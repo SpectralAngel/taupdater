@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from updater import views
 
 urlpatterns = [
+    url(r'^bridge/', include('bridge.urls')),
     url(
         r'^bank/update/(?P<pk>\d+)$',
         views.BankUpdateFileDetailView.as_view(),
