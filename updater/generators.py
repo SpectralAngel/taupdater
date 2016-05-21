@@ -114,6 +114,8 @@ class Occidente(Generator):
         rows = []
 
         for afiliado in self.afiliados:
+            if not afiliado.cuenta:
+                continue
             row = self.format.format(
                 int(self.banco.cuenta),
                 int(self.banco.codigo),
