@@ -1,11 +1,14 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 
+import re
 from decimal import Decimal
 
 import unicodecsv
 from bridge.models import CobroBancarioBanhcafe
 from django.http import StreamingHttpResponse
+
+non_decimal = re.compile(r'[^\d.]+')
 
 
 class Echo(object):
@@ -114,7 +117,7 @@ class Occidente(Generator):
             row = self.format.format(
                 int(self.banco.cuenta),
                 int(self.banco.codigo),
-                int(afiliado.cuenta),
+                int(non_decimal.sub('', afiliado.cuenta)),
                 afiliado.card_id,
                 afiliado.id,
                 self.fecha.year,
