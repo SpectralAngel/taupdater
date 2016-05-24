@@ -271,6 +271,8 @@ class Ficensa(Generator):
         charges = []
 
         for afiliado in self.afiliados:
+            if not afiliado.cuenta:
+                continue
             nombre_afiliado = "{0} {1}".format(afiliado.first_name,
                                                afiliado.last_name)
             if len(nombre_afiliado) > 40:
