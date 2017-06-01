@@ -254,7 +254,7 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 years[n][m] = {}
 
                 try:
-                    years[n][m]['cuenta'] = CuentaRetrasada.filter(
+                    years[n][m]['cuenta'] = CuentaRetrasada.objects.filter(
                         mes=m,
                         anio=n,
                     ).first().account
@@ -266,6 +266,8 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                     )['amount']
                 except:
                     print(n, m)
+
+        extras = []
 
         for afiliado in cotizacion.affiliate_set.all():
             cuota = afiliado.get_delayed()
@@ -282,7 +284,9 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 extra.amount = monto
                 extra.retrasada = True
                 extra.account = cuenta
-                extra.save()
+                extras.append(extra)
+
+        Extra.objects.bulk_create(extras)
 
         messages.info(
             self.request,
