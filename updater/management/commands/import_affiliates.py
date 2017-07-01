@@ -25,6 +25,7 @@ class Command(BaseCommand):
                     afiliado.last_name = line[1]
                     afiliado.card_id = line[2]
                     afiliado.joined = datetime.strptime(line[3], '%d/%m/%Y')
+                    afiliado.banco_completo = True
                     afiliados.append(afiliado)
 
                 Affiliate.objects.bulk_create(afiliados)
