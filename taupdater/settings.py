@@ -49,7 +49,8 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'authentication',
     'updater',
-    'bridge'
+    'bridge',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (
