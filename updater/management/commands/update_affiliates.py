@@ -13,9 +13,11 @@ class Command(BaseCommand):
         parser.add_argument('file', nargs='+', type=str)
 
     def handle(self, *args, **options):
-        reader = csv.reader(open(options['file'], 'rU'))
+        for archivo in options['file']:
+            with open(archivo, 'rU') as source:
+                reader = csv.reader(source)
 
-        for line in reader:
-            afiliado = Affiliate.objects.get(pk=int(line[0]))
-            afiliado.joined = datetime.strptime(line[4], '%d/%m/%Y')
-            afiliado.save()
+            for line in reader:
+                afiliado = Affiliate.objects.get(pk=int(line[0]))
+                afiliado.joined = datetime.strptime(line[4], '%d/%m/%Y')
+                afiliado.save()
