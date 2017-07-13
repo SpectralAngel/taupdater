@@ -18,7 +18,7 @@ from django.views.generic.edit import FormView
 from updater.forms import CobroGenerarForm, CotizacionCobroGenerarForm
 from updater.models import BankUpdateFile, CotizacionUpdateFile, \
     ComparacionBanco, BancoFaltante
-import generators
+from updater import generators
 
 build_obligation_map()
 
