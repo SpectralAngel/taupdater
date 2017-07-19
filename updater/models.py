@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 
-import unicodecsv as csv
+import six
 from bridge.models import Banco, Account, Affiliate, Cotizacion
 from bridge.utils import Zero
 from django.conf import settings
@@ -15,6 +15,11 @@ from django.db.models import Sum
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
+
+if six.PY2:
+    import unicodecsv as csv
+elif six.PY3:
+    import csv
 
 
 @python_2_unicode_compatible
@@ -143,6 +148,10 @@ class CotizacionUpdateFile(TimeStampedModel):
             self.fecha_de_cobro.strftime(str('%Y/%m/%d'))
         )
 
+    def get_absolute_url(self):
+
+        return reverse('cotizacion-update-file', args=[self.id])
+
     def process(self):
         """
         Processes the information inside the file to update the payments of a
@@ -206,7 +215,7 @@ class CotizacionUpdateFile(TimeStampedModel):
     def compare(self):
 
         self.diferenciacotizacion_set.all().delete()
-        self.errorcomparacionbanco_set.all().delete()
+        self.errorcomparacioncotizacion_set.all().delete()
 
         reader = csv.reader(storage.open(self.archivo.name, 'rU'))
 
@@ -288,6 +297,12 @@ class CotizacionUpdateFile(TimeStampedModel):
                 diferencias.append(registro)
 
         DiferenciaCotizacion.objects.bulk_create(diferencias)
+
+    def total_comparacion(self):
+
+        return self.diferenciacotizacion_set.aggregate(
+            total=Sum('diferencia')
+        )['total']
 
 
 @python_2_unicode_compatible

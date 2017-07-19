@@ -207,7 +207,8 @@ class CotizacionUpdateFileList(LoginRequiredMixin, ListView):
     Displays a list of :class:`CotizacionUpdateFile` that are not yet processed
     """
     model = CotizacionUpdateFile
-    queryset = CotizacionUpdateFile.objects.filter(procesado=False)
+    paginate_by = 10
+    queryset = CotizacionUpdateFile.objects.order_by('-fecha_de_procesamiento')
 
 
 class CotizacionUpdateFileProcessView(LoginRequiredMixin, RedirectView):
@@ -228,6 +229,39 @@ class CotizacionUpdateFileProcessView(LoginRequiredMixin, RedirectView):
         )
 
         return reverse('cotizacion-file-index')
+
+
+class CotizacionUpdateFileCompareView(LoginRequiredMixin, RedirectView):
+    """
+    Applies the payments file to the :class:`Affiliate`s every payment
+    corresponds to.
+    """
+    permanent = False
+
+    @transaction.atomic
+    def get_redirect_url(self, *args, **kwargs):
+        cotizacionupdatefile = get_object_or_404(CotizacionUpdateFile,
+                                                 pk=kwargs['pk'])
+        cotizacionupdatefile.compare()
+        messages.info(
+            self.request,
+            _('Comparación Completada')
+        )
+
+        return reverse('cotizacion-file-index')
+
+
+class CotizacionUpdateFileDetailView(LoginRequiredMixin, DetailView):
+    """
+    Displays the information associated to a :class:`CotizacionUpdateFile`
+    """
+    model = CotizacionUpdateFile
+    queryset = CotizacionUpdateFile.objects.select_related(
+        'cotizacion'
+    ).prefetch_related(
+        'errorcomparacioncotizacion_set',
+        'errorlecturacotizacion_set',
+    )
 
 
 class RetrasadasCrearView(LoginRequiredMixin, RedirectView):

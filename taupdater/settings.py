@@ -35,7 +35,6 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = (
@@ -51,9 +50,10 @@ INSTALLED_APPS = (
     'updater',
     'bridge',
     'django_extensions',
+    'bootstrap_pagination',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,11 +85,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'taupdater.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 DATABASES = {'default': env.db()}
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -104,7 +102,7 @@ USE_L10N = True
 
 USE_TZ = True
 STATIC_ROOT = str(root.path('staticfiles'))
-
+INTERNAL_IPS = ('127.0.0.1',)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

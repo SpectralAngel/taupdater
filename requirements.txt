@@ -15,3 +15,4 @@ virtualenv
 django-debug-toolbar
 django-crispy-forms
 django-bootstrap3-datetimepicker-2
+django-bootstrap-pagination

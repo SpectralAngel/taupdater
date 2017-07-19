@@ -60,6 +60,18 @@ urlpatterns = [
     ),
 
     url(
+        r'^cotizacion/update/(?P<pk>\d+)/compare$',
+        views.CotizacionUpdateFileCompareView.as_view(),
+        name='cotizacion-update-file-compare'
+    ),
+
+    url(
+        r'^cotizacion/update/(?P<pk>\d+)$',
+        views.CotizacionUpdateFileDetailView.as_view(),
+        name='cotizacion-update-file'
+    ),
+
+    url(
         r'^cotizacion/list$',
         views.CotizacionListView.as_view(),
         name='cotizacion-update-list'
