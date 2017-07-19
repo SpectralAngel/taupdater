@@ -203,6 +203,92 @@ class CotizacionUpdateFile(TimeStampedModel):
         self.procesado = True
         self.save()
 
+    def compare(self):
+
+        self.diferenciacotizacion_set.all().delete()
+        self.errorcomparacionbanco_set.all().delete()
+
+        reader = csv.reader(storage.open(self.archivo.name, 'rU'))
+
+        afiliados = {}
+        afiliado_identidad = {}
+        pagos = defaultdict(Decimal)
+        diferencias = []
+
+        todos = Affiliate.objects.select_related(
+            'cotizacion',
+        ).prefetch_related(
+            'deduced_set'
+        ).filter(card_id__isnull=False)
+
+        for afiliado in todos:
+            afiliados[afiliado.id] = afiliado
+            identidad = afiliado.card_id.replace('-', '')
+            afiliado_identidad[identidad] = afiliado
+
+        for row in reader:
+
+            amount = Decimal(row[2].replace(',', ''))
+            try:
+                if self.usar_id:
+                    afiliado = afiliados[int(row[0])]
+                else:
+                    identidad = '{0:013d}'.format(int(row[0].replace('-', '')))
+                    afiliado = afiliado_identidad[identidad]
+
+                pagos[afiliado] += amount
+
+            except KeyError as key_error:
+                print(key_error)
+                error = ErrorComparacionCotizacion(
+                    archivo=self,
+                    no_encontrado=row[0],
+                    monto=amount
+                )
+                error.save()
+
+            except ValueError as value_error:
+                print(value_error)
+                error = ErrorComparacionCotizacion(
+                    archivo=self,
+                    no_encontrado=row[0],
+                    monto=amount
+                )
+                error.save()
+
+            except InvalidOperation as value_error:
+                print(value_error)
+                error = ErrorComparacionCotizacion()
+                error.comparacion = self
+                error.no_encontrado = '{0} {1}'.format(row[0], row[1])
+                error.save()
+
+        for afiliado in pagos:
+            pago = pagos[afiliado]
+            deducciones = afiliado.deduced_set.filter(
+                year=self.fecha_de_cobro.year,
+                month=self.fecha_de_cobro.month,
+                cotizacion=self.cotizacion,
+            ).aggregate(
+                total=Sum('amount')
+            )['total']
+
+            if deducciones is None:
+                deducciones = Zero
+
+            diferencia = pago - deducciones
+            if diferencia != Zero:
+                registro = DiferenciaCotizacion(
+                    archivo=self,
+                    afiiado=afiliado,
+                    diferencia=diferencia,
+                    deducciones=deducciones,
+                    monto_en_archivo=pago
+                )
+                diferencias.append(registro)
+
+        DiferenciaCotizacion.objects.bulk_create(diferencias)
+
 
 @python_2_unicode_compatible
 class ErrorLecturaCotizacion(TimeStampedModel):
@@ -250,6 +336,7 @@ class ComparacionBanco(TimeStampedModel):
         afiliados = {}
         afiliado_identidad = {}
         pagos = defaultdict(Decimal)
+        diferencias = []
 
         todos = Affiliate.objects.select_related(
             'banco',
@@ -313,7 +400,8 @@ class ComparacionBanco(TimeStampedModel):
                                            diferencia=diferencia,
                                            deducciones=deducciones,
                                            monto_en_archivo=pago)
-                registro.save()
+                diferencias.append(registro)
+        DiferenciaBanco.objects.bulk_create(diferencias)
 
     def total(self):
 
@@ -334,6 +422,22 @@ class ErrorComparacionBanco(TimeStampedModel):
     def __str__(self):
         return _('{0} {1}').format(
             self.comparacion.banco.nombre,
+            self.no_encontrado
+        )
+
+
+class ErrorComparacionCotizacion(TimeStampedModel):
+    """
+    Registra los errores de lectura que se han encontrado en la comparación de
+    los datos de un banco
+    """
+    archivo = models.ForeignKey(CotizacionUpdateFile)
+    no_encontrado = models.CharField(max_length=255)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return _('{0} {1}').format(
+            self.archivo.cotizacion.nombre,
             self.no_encontrado
         )
 
@@ -359,6 +463,26 @@ class DiferenciaBanco(TimeStampedModel):
 
 
 @python_2_unicode_compatible
+class DiferenciaCotizacion(TimeStampedModel):
+    """
+    Registra las diferencias que se encontraron en las deducciones de un
+    afiliado y los que se encuentra en el archivo
+    """
+    archivo = models.ForeignKey(CotizacionUpdateFile)
+    afiiado = models.ForeignKey(Affiliate)
+    diferencia = models.DecimalField(max_digits=10, decimal_places=2)
+    deducciones = models.DecimalField(max_digits=10, decimal_places=2)
+    monto_en_archivo = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return _('{0} {1} {2}').format(
+            self.afiiado.first_name,
+            self.afiiado.last_name,
+            self.diferencia
+        )
+
+
+@python_2_unicode_compatible
 class BancoFaltante(TimeStampedModel):
     """
     Registers those who need to be charged again
@@ -369,7 +493,6 @@ class BancoFaltante(TimeStampedModel):
     cobrar_colegiacion = models.BooleanField(default=True)
 
     def __str__(self):
-
         return self.banco.nombre
 
     def afiliados(self):
