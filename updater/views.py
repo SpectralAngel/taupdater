@@ -302,6 +302,7 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                     print(n, m)
 
         extras = []
+        om = obligation_map
 
         for afiliado in cotizacion.affiliate_set.all():
             cuota = afiliado.get_delayed()
@@ -309,12 +310,7 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 mes = cuota.delayed()
                 anio = cuota.year
                 cuenta = years[anio][mes]['cuenta']
-                if afiliado.active:
-                    monto = obligation_map[anio][mes]['active']
-                elif afiliado.jubilated is not None and afiliado.jubilated.year < anio:
-                    monto = obligation_map[anio][mes]['retired']
-                else:
-                    monto = obligation_map[anio][mes]['active']
+                monto = cuota.calculate_amount(mes)
 
                 extra = Extra()
                 extra.affiliate = afiliado
