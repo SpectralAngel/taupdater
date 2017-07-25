@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from bridge.models import Banco, build_obligation_map, Cotizacion, CuotaTable, \
-    CuentaRetrasada, Obligation, Extra
+    CuentaRetrasada, Obligation, Extra, obligation_map
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
@@ -312,9 +312,9 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 if afiliado.active:
                     monto = years[anio][mes]['active']
                 elif afiliado.jubilated is not None and afiliado.jubilated.year < anio:
-                    monto = years[anio][mes]['retired']
+                    monto = obligation_map[anio][mes]['retired']
                 else:
-                    monto = years[anio][mes]['active']
+                    monto = obligation_map[anio][mes]['active']
 
                 extra = Extra()
                 extra.affiliate = afiliado
