@@ -309,7 +309,10 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 mes = cuota.delayed()
                 anio = cuota.year
                 cuenta = years[anio][mes]['cuenta']
-                monto = years[anio][mes]['obligacion']
+                if afiliado.active:
+                    monto = years[anio][mes]['active']
+                else:
+                    monto = years[anio][mes]['retired']
 
                 extra = Extra()
                 extra.affiliate = afiliado
