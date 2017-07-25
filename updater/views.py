@@ -311,8 +311,10 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 cuenta = years[anio][mes]['cuenta']
                 if afiliado.active:
                     monto = years[anio][mes]['active']
-                else:
+                elif afiliado.jubilated is not None and afiliado.jubilated.year < anio:
                     monto = years[anio][mes]['retired']
+                else:
+                    monto = years[anio][mes]['active']
 
                 extra = Extra()
                 extra.affiliate = afiliado
