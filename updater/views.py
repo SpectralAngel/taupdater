@@ -310,7 +310,7 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 anio = cuota.year
                 cuenta = years[anio][mes]['cuenta']
                 if afiliado.active:
-                    monto = years[anio][mes]['active']
+                    monto = obligation_map[anio][mes]['active']
                 elif afiliado.jubilated is not None and afiliado.jubilated.year < anio:
                     monto = obligation_map[anio][mes]['retired']
                 else:
