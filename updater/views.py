@@ -292,25 +292,20 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                         mes=m,
                         anio=n,
                     ).first().account
-                    years[n][m]['obligacion'] = Obligation.objects.filter(
-                        month=m,
-                        year=n,
-                    ).aggregate(
-                        total=Sum('amount')
-                    )['amount']
-                except:
-                    print(n, m)
+                except Exception as error:
+                    print(n, m, error)
 
         extras = []
-        om = obligation_map
 
-        for afiliado in cotizacion.affiliate_set.all():
+        for afiliado in cotizacion.affiliate_set.prefetch_related(
+            'cuotatable_set',
+        ).all():
             cuota = afiliado.get_delayed()
-            if cuota:
+            if cuota and cuota.year <= current_year:
                 mes = cuota.delayed()
                 anio = cuota.year
                 cuenta = years[anio][mes]['cuenta']
-                monto = cuota.calculate_amount(mes)
+                monto = cuota.month_payment(mes)
 
                 extra = Extra()
                 extra.affiliate = afiliado
@@ -321,6 +316,7 @@ class RetrasadasCrearView(LoginRequiredMixin, RedirectView):
                 extra.account = cuenta
                 extras.append(extra)
 
+        Extra.objects.filter(retrasada=True, months=1).delete()
         Extra.objects.bulk_create(extras)
 
         messages.info(
