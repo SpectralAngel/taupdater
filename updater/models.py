@@ -197,7 +197,7 @@ class CotizacionUpdateFile(TimeStampedModel):
                 pagos[afiliado] += amount
 
             except KeyError as key_error:
-                error = ErrorLectura()
+                error = ErrorLecturaCotizacion()
                 error.bank_update_file = self
                 error.no_encontrado = row[0]
                 error.monto = amount
