@@ -198,7 +198,7 @@ class CotizacionUpdateFile(TimeStampedModel):
 
             except KeyError as key_error:
                 error = ErrorLecturaCotizacion()
-                error.bank_update_file = self
+                error.cotizacion_update_file = self
                 error.no_encontrado = row[0]
                 error.monto = amount
                 error.save()
