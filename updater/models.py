@@ -161,6 +161,9 @@ class CotizacionUpdateFile(TimeStampedModel):
         if self.procesado:
             return
 
+        self.diferenciacotizacion_set.all().delete()
+        self.errorcomparacioncotizacion_set.all().delete()
+
         reader = csv.reader(storage.open(self.archivo.name, 'rU'))
 
         afiliados = {}
